@@ -4,8 +4,7 @@
     "description": "Senior Full-Stack Web Architect & GeM Consultant Portfolio",
     "main": "server/server.js",
     "scripts": {
-        "start": "node server/server.js",
-        "dev": "nodemon server/server.js"
+        "start": "node server/server.js"
     },
     "keywords": [
         "portfolio",

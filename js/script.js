@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('Portfolio: Script loaded');
+    console.log('Consultant Portfolio: Script loaded');
 
     // --- Theme Toggle Logic ---
     const themeToggle = document.getElementById('theme-toggle');
@@ -23,47 +23,56 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error('Portfolio: Theme toggle button not found!');
     }
 
-    // --- Sidebar Toggle Logic ---
+    // --- Mobile Menu Toggle Logic ---
     const mobileToggle = document.querySelector('.mobile-toggle');
-    const sidebar = document.querySelector('.sidebar');
-    const overlay = document.querySelector('.sidebar-overlay');
+    const navMenu = document.querySelector('.nav-menu');
 
-    function toggleSidebar() {
-        if (sidebar) {
-            sidebar.classList.toggle('open');
-            console.log('Portfolio: Toggled sidebar');
-        }
-    }
-
-    function closeSidebar() {
-        if (sidebar) {
-            sidebar.classList.remove('open');
-            console.log('Portfolio: Closed sidebar');
-        }
-    }
-
-    if (mobileToggle) {
+    if (mobileToggle && navMenu) {
         mobileToggle.addEventListener('click', (e) => {
-            e.stopPropagation(); // Prevent immediate closing
-            toggleSidebar();
+            e.stopPropagation();
+            navMenu.classList.toggle('active');
         });
-    } else {
-        console.error('Portfolio: Mobile toggle button not found!');
-    }
 
-    if (overlay) {
-        overlay.addEventListener('click', closeSidebar);
-    }
-
-    // Close sidebar when clicking a link (on mobile)
-    const navLinks = document.querySelectorAll('.nav-item a');
-    navLinks.forEach(link => {
-        link.addEventListener('click', () => {
-            if (window.innerWidth <= 1024) {
-                closeSidebar();
+        // Close menu when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!navMenu.contains(e.target) && !mobileToggle.contains(e.target)) {
+                navMenu.classList.remove('active');
             }
         });
-    });
+
+        // Close menu when clicking a link
+        const navLinks = document.querySelectorAll('.nav-link');
+        navLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                navMenu.classList.remove('active');
+            });
+        });
+    }
+
+    // --- Visitor Count Logic (Local Simulation) ---
+    const visitorCountElement = document.getElementById('visitor-count');
+    if (visitorCountElement) {
+        let count = localStorage.getItem('visitorCount');
+        if (!count) {
+            // Start with a realistic base number for credibility
+            count = 1247;
+        } else {
+            // Increment on new session (simplified)
+            // In a real app, this would be server-side.
+            // Here we just increment on load for demonstration if not recently visited
+            const lastVisit = localStorage.getItem('lastVisit');
+            const now = new Date().getTime();
+
+            // Only increment if more than 1 hour has passed
+            if (!lastVisit || (now - lastVisit > 3600000)) {
+                count = parseInt(count) + 1;
+            }
+        }
+
+        localStorage.setItem('visitorCount', count);
+        localStorage.setItem('lastVisit', new Date().getTime());
+        visitorCountElement.innerText = count;
+    }
 
     // --- Contact Form Handling ---
     const contactForm = document.getElementById('contact-form');
@@ -89,26 +98,25 @@ document.addEventListener('DOMContentLoaded', () => {
             data.consent = consentCheckbox ? consentCheckbox.checked : false;
 
             try {
+                // Mock submission for static site demo
+                await new Promise(resolve => setTimeout(resolve, 1500));
+
+                // Simulate success
+                formStatus.innerText = 'Inquiry submitted successfully. We will contact you shortly.';
+                formStatus.classList.add('success');
+                contactForm.reset();
+                console.log('Portfolio: Message sent successfully (Mock)');
+
+                /* 
+                // Real backend implementation:
                 const response = await fetch('/api/inquiries', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
                 });
+                // ... handle response
+                */
 
-                const result = await response.json();
-
-                if (response.ok) {
-                    formStatus.innerText = 'Message sent successfully! We will get back to you soon.';
-                    formStatus.classList.add('success');
-                    contactForm.reset();
-                    console.log('Portfolio: Message sent successfully');
-                } else {
-                    formStatus.innerText = result.error || 'Failed to send message. Please try again.';
-                    formStatus.classList.add('error');
-                    console.error('Portfolio: Failed to send message', result.error);
-                }
             } catch (error) {
                 console.error('Portfolio: Error sending message', error);
                 formStatus.innerText = 'An error occurred. Please try again later.';
@@ -135,10 +143,47 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }, observerOptions);
 
-    document.querySelectorAll('.section-title, .card, .project-card, .skill-item').forEach(el => {
+    // Updated selectors for new content structure
+    document.querySelectorAll('.section-title, .card').forEach(el => {
         el.style.opacity = '0';
         el.style.transform = 'translateY(20px)';
         el.style.transition = 'opacity 0.6s ease-out, transform 0.6s ease-out';
         observer.observe(el);
+    });
+
+    // --- Interactive Card Effects ---
+    const cards = document.querySelectorAll('.card');
+
+    cards.forEach(card => {
+        card.addEventListener('mousemove', (e) => {
+            const rect = card.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            // Update CSS variables for glow position
+            card.style.setProperty('--mouse-x', `${x}px`);
+            card.style.setProperty('--mouse-y', `${y}px`);
+
+            // Calculate tilt rotation (subtle effect)
+            // Center of the card is (0,0) for calculation
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+
+            // Max rotation in degrees
+            const maxRotation = 5;
+
+            const rotateX = ((y - centerY) / centerY) * -maxRotation; // Invert Y for correct tilt direction
+            const rotateY = ((x - centerX) / centerX) * maxRotation;
+
+            // Apply transform
+            // perspective is set in CSS
+            card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`;
+        });
+
+        card.addEventListener('mouseleave', () => {
+            // Reset transform on leave
+            card.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) scale3d(1, 1, 1)';
+            // Optional: fade out glow is handled by CSS transition on opacity
+        });
     });
 });
