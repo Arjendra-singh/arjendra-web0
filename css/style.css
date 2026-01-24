@@ -296,6 +296,26 @@ ul {
     z-index: 1002;
 }
 
+.btn-cv {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 16px;
+    background-color: var(--accent-blue);
+    color: #ffffff;
+    border-radius: 6px;
+    font-weight: 500;
+    font-size: 0.9rem;
+    transition: var(--transition);
+    margin-left: 5px;
+}
+
+.btn-cv:hover {
+    background-color: #2563EB;
+    color: #ffffff;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
 /* --- FOOTER STYLES --- */
 .site-footer {
     background-color: var(--footer-bg);
