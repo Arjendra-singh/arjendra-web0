@@ -1,4 +1,5 @@
 require('dotenv').config();
+
 const express = require('express');
 const mongoose = require('mongoose');
 const helmet = require('helmet');
@@ -15,21 +16,31 @@ app.use(helmet());
 app.use(cors());
 app.use(morgan('dev'));
 app.use(express.json());
-app.use(express.static(path.join(__dirname, '../'))); // Serve static files from root
+app.use(express.static(path.join(__dirname, '../')));
 
-// MongoDB Connection
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/portfolio_db';
+// ✅ MongoDB Connection (MANDATORY ENV ONLY — no localhost fallback)
+const MONGODB_URI = process.env.MONGODB_URI;
 
-mongoose.connect(MONGODB_URI)
-    .then(() => console.log('MongoDB Connected'))
-    .catch(err => console.error('MongoDB Connection Error:', err));
+if (!MONGODB_URI) {
+    console.error('❌ MONGODB_URI not found in environment variables');
+    process.exit(1);
+}
 
-// API Routes
+mongoose.connect(MONGODB_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+})
+    .then(() => console.log('✅ MongoDB Connected'))
+    .catch(err => {
+        console.error('❌ MongoDB Connection Error:', err);
+        process.exit(1);
+    });
+
+// ✅ API Route
 app.post('/api/inquiries', async (req, res) => {
     try {
         const { name, company, service, email, phone, message, consent } = req.body;
 
-        // Basic Validation
         if (!name || !email || !service || !message) {
             return res.status(400).json({ error: 'Missing required fields' });
         }
@@ -46,21 +57,24 @@ app.post('/api/inquiries', async (req, res) => {
         });
 
         const savedInquiry = await newInquiry.save();
+
         res.status(201).json({
             message: 'Inquiry received successfully',
             id: savedInquiry._id,
             createdAt: savedInquiry.createdAt
         });
+
     } catch (error) {
-        console.error('Error saving inquiry:', error);
+        console.error('❌ Error saving inquiry:', error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
 
-// Serve the requested HTML file, falling back to index.html
+// ✅ Static fallback
 app.get('*', (req, res) => {
     const fs = require('fs');
     const requestedFile = path.join(__dirname, '..', req.path);
+
     if (req.path !== '/' && fs.existsSync(requestedFile) && fs.statSync(requestedFile).isFile()) {
         res.sendFile(requestedFile);
     } else {
@@ -68,6 +82,7 @@ app.get('*', (req, res) => {
     }
 });
 
+// ✅ Start Server
 app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+    console.log(`🚀 Server running on port ${PORT}`);
 });
