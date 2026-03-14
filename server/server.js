@@ -18,7 +18,7 @@ app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '../')));
 
-// ✅ MongoDB Connection (MANDATORY ENV ONLY — no localhost fallback)
+// ✅ MongoDB Connection (FINAL CLEAN)
 const MONGODB_URI = process.env.MONGODB_URI;
 
 if (!MONGODB_URI) {
@@ -26,13 +26,10 @@ if (!MONGODB_URI) {
     process.exit(1);
 }
 
-mongoose.connect(MONGODB_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-})
+mongoose.connect(MONGODB_URI)
     .then(() => console.log('✅ MongoDB Connected'))
     .catch(err => {
-        console.error('❌ MongoDB Connection Error:', err);
+        console.error('❌ MongoDB Connection Error:', err.message);
         process.exit(1);
     });
 
@@ -45,7 +42,7 @@ app.post('/api/inquiries', async (req, res) => {
             return res.status(400).json({ error: 'Missing required fields' });
         }
 
-        const newInquiry = new Inquiry({
+        const savedInquiry = await Inquiry.create({
             name,
             company,
             service,
@@ -56,17 +53,14 @@ app.post('/api/inquiries', async (req, res) => {
             source: 'Portfolio Contact Form'
         });
 
-        const savedInquiry = await newInquiry.save();
-
         res.status(201).json({
             message: 'Inquiry received successfully',
-            id: savedInquiry._id,
-            createdAt: savedInquiry.createdAt
+            id: savedInquiry._id
         });
 
     } catch (error) {
-        console.error('❌ Error saving inquiry:', error);
-        res.status(500).json({ error: 'Internal Server Error' });
+        console.error('❌ Error saving inquiry:', error.message);
+        res.status(500).json({ error: error.message });
     }
 });
 
