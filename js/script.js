@@ -75,7 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Contact Form Handling ---
-    const contactForm = document.getElementById('contact-form');
+    const contactForm = document.getElementById('contactForm') || document.getElementById('contact-form');
     const formStatus = document.getElementById('form-status');
 
     if (contactForm) {
@@ -87,8 +87,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const originalBtnText = submitBtn.innerText;
             submitBtn.innerText = 'Sending...';
             submitBtn.disabled = true;
-            formStatus.innerText = '';
-            formStatus.className = 'form-status';
+
+            if (formStatus) {
+                formStatus.innerText = '';
+                formStatus.className = 'form-status';
+            }
 
             const formData = new FormData(contactForm);
             const data = Object.fromEntries(formData.entries());
@@ -97,30 +100,52 @@ document.addEventListener('DOMContentLoaded', () => {
             const consentCheckbox = contactForm.querySelector('#consent');
             data.consent = consentCheckbox ? consentCheckbox.checked : false;
 
+            // Map 'organization' field to 'company' for backend compatibility
+            if (data.organization !== undefined) {
+                data.company = data.organization;
+                delete data.organization;
+            }
+
             try {
-                // Mock submission for static site demo
-                await new Promise(resolve => setTimeout(resolve, 1500));
-
-                // Simulate success
-                formStatus.innerText = 'Inquiry submitted successfully. We will contact you shortly.';
-                formStatus.classList.add('success');
-                contactForm.reset();
-                console.log('Portfolio: Message sent successfully (Mock)');
-
-                /* 
-                // Real backend implementation:
                 const response = await fetch('/api/inquiries', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
                 });
-                // ... handle response
-                */
+
+                if (!response.ok) {
+                    const errData = await response.json().catch(() => ({}));
+                    throw new Error(errData.error || `Server error: ${response.status}`);
+                }
+
+                // Show success message
+                if (formStatus) {
+                    formStatus.style.display = 'block';
+                    formStatus.style.padding = '15px';
+                    formStatus.style.backgroundColor = 'rgba(22, 163, 74, 0.15)';
+                    formStatus.style.color = '#16a34a';
+                    formStatus.style.border = '2px solid rgba(22, 163, 74, 0.5)';
+                    formStatus.style.borderRadius = '8px';
+                    formStatus.style.marginTop = '15px';
+                    formStatus.style.fontWeight = 'bold';
+                    formStatus.innerText = '✅ Inquiry submitted successfully! We will contact you shortly.';
+                    formStatus.classList.add('success');
+                }
+                
+                // Also show a standard alert as a guaranteed fallback
+                alert('✅ Inquiry submitted successfully! We will contact you shortly.');
+
+                contactForm.reset();
+                console.log('Portfolio: Inquiry submitted successfully to backend.');
 
             } catch (error) {
                 console.error('Portfolio: Error sending message', error);
-                formStatus.innerText = 'An error occurred. Please try again later.';
-                formStatus.classList.add('error');
+                if (formStatus) {
+                    formStatus.innerText = '❌ Submission failed. Please try again later.';
+                    formStatus.classList.add('error');
+                } else {
+                    alert('Submission failed ❌ Please try again.');
+                }
             } finally {
                 submitBtn.innerText = originalBtnText;
                 submitBtn.disabled = false;

@@ -57,9 +57,15 @@ app.post('/api/inquiries', async (req, res) => {
     }
 });
 
-// Serve index.html for any other route (SPA behavior, though mostly single page here)
+// Serve the requested HTML file, falling back to index.html
 app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../index.html'));
+    const fs = require('fs');
+    const requestedFile = path.join(__dirname, '..', req.path);
+    if (req.path !== '/' && fs.existsSync(requestedFile) && fs.statSync(requestedFile).isFile()) {
+        res.sendFile(requestedFile);
+    } else {
+        res.sendFile(path.join(__dirname, '../index.html'));
+    }
 });
 
 app.listen(PORT, () => {

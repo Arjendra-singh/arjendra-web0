@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const InquirySchema = new mongoose.Schema({
   name: { type: String, required: true, trim: true },
   company: { type: String, default: '', trim: true },
-  service: { type: String, enum: ['Software Dev','GeM Consultancy','General'], required: true },
+  service: { type: String, enum: ['Software Dev', 'GeM Consultancy', 'General', 'GeM Registration', 'Tender Management', 'Compliance Audit', 'OEM Authorization', 'Other'], required: true },
   email: { type: String, required: true, lowercase: true, trim: true },
   phone: { type: String, default: '' },
   message: { type: String, required: true, maxlength: 2000 },

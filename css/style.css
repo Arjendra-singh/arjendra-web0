@@ -1082,3 +1082,21 @@ textarea:focus {
         animation: none !important;
     }
 }
+/* Form Status Messages */
+.form-status {
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    min-height: 1.5rem;
+}
+.form-status.success {
+    color: #16a34a;
+    background: rgba(22, 163, 74, 0.1);
+    border: 1px solid rgba(22, 163, 74, 0.3);
+}
+.form-status.error {
+    color: #dc2626;
+    background: rgba(220, 38, 38, 0.1);
+    border: 1px solid rgba(220, 38, 38, 0.3);
+}
